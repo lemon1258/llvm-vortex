@@ -17,10 +17,6 @@ Target &llvm::getTheCpu0Target() {
   static Target TheCpu0Target;
   return TheCpu0Target;
 }
-Target &llvm::getTheCpu0elTarget() {
-  static Target TheCpu0elTarget;
-  return TheCpu0elTarget;
-}
 
 extern "C" void LLVMInitializeCpu0TargetInfo() {
   RegisterTarget<Triple::cpu0, /*HasJIT=*/true> X(getTheCpu0Target(),

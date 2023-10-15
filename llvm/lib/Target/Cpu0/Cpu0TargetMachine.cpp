@@ -67,5 +67,5 @@ Cpu0TargetMachine::Cpu0TargetMachine(const Target &T, const Triple &TT,
                         CPU, FS, Options, getEffectiveRelocModel(JIT, RM),
                         getEffectiveCodeModel(CM, CodeModel::Small), OL)
 {
-    //initAsmInfo();
+    initAsmInfo();
 }
