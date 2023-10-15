@@ -84,6 +84,7 @@ StringRef Triple::getArchTypeName(ArchType Kind) {
   case x86_64:         return "x86_64";
   case xcore:          return "xcore";
   case xtensa:         return "xtensa";
+  case cpu0:           return "cpu0";
   }
 
   llvm_unreachable("Invalid ArchType!");
@@ -175,6 +176,7 @@ StringRef Triple::getArchTypePrefix(ArchType Kind) {
   case dxil:        return "dx";
 
   case xtensa:      return "xtensa";
+  case cpu0:      return "cpu0";
   }
 }
 
@@ -378,6 +380,7 @@ Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
     .Case("loongarch64", loongarch64)
     .Case("dxil", dxil)
     .Case("xtensa", xtensa)
+    .Case("cpu0", cpu0)
     .Default(UnknownArch);
 }
 
@@ -855,6 +858,7 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
   case Triple::ve:
   case Triple::xcore:
   case Triple::xtensa:
+  case Triple::cpu0:
     return Triple::ELF;
 
   case Triple::ppc64:
@@ -1436,6 +1440,7 @@ static unsigned getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
   case llvm::Triple::x86:
   case llvm::Triple::xcore:
   case llvm::Triple::xtensa:
+  case llvm::Triple::cpu0:
     return 32;
 
   case llvm::Triple::aarch64:
