@@ -41,7 +41,6 @@ def simm16 : Operand<i32> {
 
 // Address operand
 def mem : Operand<iPTR> {
-  let PrintMethod = "printMemOperand";
   let MIOperandInfo = (ops CPURegs, simm16);
   let EncoderMethod = "getMemEncoding";
 }
@@ -63,14 +62,14 @@ class AlignedLoad<PatFrag Node>
   : PatFrag<(ops node:$ptr), (Node node:$ptr),
             [{
               LoadSDNode *LD = cast<LoadSDNode>(N);
-              return LD->getMemoryVT().getSizeInBits()/8 <= LD->getAlignment();
+              return Align(LD->getMemoryVT().getSizeInBits()/8) <= LD->getAlign();
             }]>;
 
 class AlignedStore<PatFrag Node>
   : PatFrag<(ops node:$val, node:$ptr), (Node node:$val, node:$ptr),
             [{
               StoreSDNode *ST = cast<StoreSDNode>(N);
-              return ST->getMemoryVT().getSizeInBits()/8 <= ST->getAlignment();
+              return Align(ST->getMemoryVT().getSizeInBits()/8) <= ST->getAlign();
             }]>;
 
 // Load/Store PatFrags

@@ -29,6 +29,40 @@ include "Cpu0Schedule.td"
 // Instruction Description
 include "Cpu0InstrInfo.td"
 
+// Calling Convention
+include "Cpu0CallingConv.td"
+
+//===----------------------------------------------------------------------===//
+// Cpu0 SUbtarget features
+//===----------------------------------------------------------------------===//
+
+def FeatureCmp            : SubtargetFeature<"cmp", "HasCmp", "true",
+                                             "Enable 'cmp' instructions.">;
+def FeatureSlt            : SubtargetFeature<"slt", "HasSlt", "true",
+                                             "Enable 'slt' instructions.">;
+def FeatureCpu032I        : SubtargetFeature<"cpu032I", "Cpu0ArchVersion",
+                                             "Cpu032I", "Cpu032I ISA Support",
+                                             [FeatureCmp]>;
+def FeatureCpu032II       : SubtargetFeature<"cpu032II", "Cpu0ArchVersion",
+                                             "Cpu032II", "Cpu032II ISA Support",
+                                             [FeatureCmp, FeatureSlt]>;
+
+//===----------------------------------------------------------------------===//
+// Cpu0 processors supported
+//===----------------------------------------------------------------------===//
+class Proc<string Name, list<SubtargetFeature> Features>
+  : Processor<Name, Cpu0GenericItineraries, Features>;
+
+def : Proc<"cpu032I", [FeatureCpu032I]>;
+def : Proc<"cpu032II", [FeatureCpu032II]>;
+// Above make Cpu0GenSubtargetInfo.inc set feature bit as the following order:
+// enum {
+//   FeatureCmp =  1ULL << 0,
+//   FeatureCpu032I =  1ULL << 1,
+//   FeatureCpu032II =  1ULL << 2,
+//   FeatureSlt =  1ULL << 3
+// };
+
 def Cpu0InstrInfo : InstrInfo;
 
 // Whill generate Cpu0GenAsmWrite.inc included by Cpu0InstPrinter.cpp, contents
@@ -39,19 +73,3 @@ def Cpu0 : Target {
   // def Cpu0InstrInfo : InstrInfo as before.
   let InstructionSet = Cpu0InstrInfo;
 }
-
-def GenericMachineModel : SchedMachineModel{
-  let MicroOpBufferSize = 0;  // The Cortex-A55 is an in-order processor
-  let IssueWidth = 2;         // It dual-issues under most circumstances
-  let LoadLatency = 4;        // Cycles for loads to access the cache. The
-                              // optimisation guide shows that most loads have
-                              // a latency of 3, but some have a latency of 4
-                              // or 5. Setting it 4 looked to be good trade-off.
-  let MispredictPenalty = 8;  // A branch direction mispredict.
-  let PostRAScheduler = 1;    // Enable PostRA scheduler pass.
-  let CompleteModel = 0;      // Covers instructions applicable to Cortex-A55.
-
-  let FullInstRWOverlapCheck = 0;
-}
-
-def : ProcessorModel<"generic", GenericMachineModel, []>;

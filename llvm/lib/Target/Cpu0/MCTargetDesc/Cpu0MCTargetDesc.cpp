@@ -13,6 +13,7 @@
 
 #include "Cpu0MCTargetDesc.h"
 #include "Cpu0MCAsmInfo.h"
+#include "InstPrinter/Cpu0InstPrinter.h"
 #include "llvm/MC/MachineLocation.h"
 #include "llvm/MC/MCELFStreamer.h"
 #include "llvm/MC/MCInstrAnalysis.h"
@@ -53,9 +54,22 @@ static MCRegisterInfo *createCpu0MCRegisterInfo(const Triple &TT) {
   InitCpu0MCRegisterInfo(X, Cpu0::SW); // defined in Cpu0GenRegisterInfo.inc
   return X;
 }
+
+static MCInstPrinter *createCpu0MCInstPrinter(const Triple &TT,
+                                              unsigned SyntaxVariant,
+                                              const MCAsmInfo &MAI,
+                                              const MCInstrInfo &MII,
+                                              const MCRegisterInfo &MRI) {
+  return new Cpu0InstPrinter(MAI, MII, MRI);
+}
+
 extern "C" void LLVMInitializeCpu0TargetMC() {
     Target& cpu0Target = getTheCpu0Target();
     RegisterMCAsmInfoFn X(cpu0Target, createCpu0MCAsmInfo);
 
     TargetRegistry::RegisterMCRegInfo(cpu0Target, createCpu0MCRegisterInfo);
+
+    // Register the MC instruction printer
+    TargetRegistry::RegisterMCInstPrinter(cpu0Target, createCpu0MCInstPrinter);
+
 }

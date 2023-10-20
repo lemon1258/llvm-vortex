@@ -12,8 +12,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "Cpu0TargetMachine.h"
+#include "Cpu0SEISelDAGToDAG.h"
+#include "Cpu0TargetObjectFile.h"
 #include "Cpu0.h"
-
+#include "MCTargetDesc/Cpu0ABIInfo.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
@@ -65,7 +67,40 @@ Cpu0TargetMachine::Cpu0TargetMachine(const Target &T, const Triple &TT,
                                      CodeGenOpt::Level OL, bool JIT)
                       : LLVMTargetMachine(T, computeDataLayout(TT, CPU, Options), TT,
                         CPU, FS, Options, getEffectiveRelocModel(JIT, RM),
-                        getEffectiveCodeModel(CM, CodeModel::Small), OL)
+                        getEffectiveCodeModel(CM, CodeModel::Small), OL),
+                        ABI(Cpu0ABIInfo::computeTargetABI()),
+                        DefaultSubtarget(TT, CPU, FS, false, *this),
+                        TLOF(std::make_unique<Cpu0TargetObjectFile>())
 {
     initAsmInfo();
+}
+
+namespace {
+// Cpu0 Code Generator Pass Configuration Options.
+class Cpu0PassConfig : public TargetPassConfig {
+public:
+  Cpu0PassConfig(Cpu0TargetMachine &TM, PassManagerBase &PM)
+    : TargetPassConfig(TM, PM) { }
+
+  Cpu0TargetMachine &getCpu0TargetMachine() const {
+    return getTM<Cpu0TargetMachine>();
+  }
+
+  const Cpu0Subtarget &getCpu0Subtarget() const {
+    return *getCpu0TargetMachine().getSubtargetImpl();
+  }
+
+  bool addInstSelector() override;
+};
+} // end namespace
+
+TargetPassConfig *Cpu0TargetMachine::createPassConfig(PassManagerBase &PM) {
+  return new Cpu0PassConfig(*this, PM);
+}
+
+// Install an instruction selector pass using
+// the ISelDAG to generate Cpu0 code
+bool Cpu0PassConfig::addInstSelector() {
+  addPass(createCpu0SEISelDAG(getCpu0TargetMachine(), getOptLevel()));
+  return false;
 }
